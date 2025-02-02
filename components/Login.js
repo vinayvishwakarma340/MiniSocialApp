@@ -2,21 +2,26 @@ import { firebaseCreateUser } from "@/utils/firebase";
 import React, { useReducer } from "react";
 
 const Login = () => {
-  const [state, dispatch] = useReducer(reducerFunction, initialState);
-
   const initialState = {
     name: null,
+    loading: false,
     email: null,
     password: null,
   };
+  const [state, dispatch] = useReducer(reducerFunction, initialState);
 
-  function reducerFunction(state, action) {
-    console.log(state, "state");
+  function reducerFunction(currentState, action) {
+    console.log(currentState, "state");
     console.log(action, "action");
     switch (action.type) {
       case "UPDATE_EMAIL":
         return {
-          ...state,
+          ...currentState,
+          [action.field]: action.value,
+        };
+      case "Loading":
+        return {
+          ...currentState,
           [action.field]: action.value,
         };
     }
@@ -26,10 +31,31 @@ const Login = () => {
 
   const handlerFormSubmit = (e) => {
     e.preventDefault();
-    const response = firebaseCreateUser("vinay.tempid@gmail.com", 1234566);
+    dispatch({
+      type: "Loading",
+      field: "loading",
+      value: true,
+    });
+
+    const response = firebaseCreateUser(state.email, state.password);
+    dispatch({
+      type: "Loading",
+      field: "loading",
+      value: true,
+    });
+    dispatch({
+      type: "UPDATE_EMAIL",
+      field: "email",
+      value: "",
+    });
+    dispatch({
+      type: "UPDATE_EMAIL",
+      field: "password",
+      value: "",
+    });
     console.log(response, "resonses");
   };
-
+  console.log("re-render");
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
@@ -57,10 +83,11 @@ const Login = () => {
                 onChange={(e) =>
                   dispatch({
                     type: "UPDATE_EMAIL",
-                    field: email,
+                    field: "email",
                     value: e.target.value,
                   })
                 }
+                value={state.email}
                 type="email"
                 name="email"
                 id="email"
@@ -82,6 +109,14 @@ const Login = () => {
             </div>
             <div className="mt-2">
               <input
+                onChange={(e) =>
+                  dispatch({
+                    type: "UPDATE_EMAIL",
+                    field: "password",
+                    value: e.target.value,
+                  })
+                }
+                value={state.password}
                 type="password"
                 name="password"
                 id="password"
@@ -97,7 +132,7 @@ const Login = () => {
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign in
+              {state.loading ? "Loading ..." : "Sign in"}
             </button>
           </div>
         </form>
